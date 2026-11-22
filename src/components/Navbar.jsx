@@ -42,6 +42,9 @@ export default function Navbar({ brand, categories, onSelectCategory }) {
           <NavLink to="/gallery" className={navLinkClass}>
             TRIP MYLA GALLERY
           </NavLink>
+          <NavLink to="/videos" className={navLinkClass}>
+  TRAVEL VIDEOS
+</NavLink>
 
           {/* Tour Packages Dropdown */}
           <div

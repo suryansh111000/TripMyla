@@ -13,6 +13,7 @@ import PackagesPage from "./pages/PackagesPage";
 import ContactPage from "./pages/ContactPage";
 import FloatingContactButtons from "./components/FloatingContactButtons";
 import PackageDetailModal from "./components/PackageDetailModal";
+import VideosPage from "./pages/VideosPage";
 
 function SmoothRouterShell({
   data,
@@ -75,6 +76,10 @@ function SmoothRouterShell({
         />
         <Route path="/about" element={<AboutPage about={data.about} />} />
         <Route path="/gallery" element={<GalleryPage gallery={data.gallery} />} />
+        <Route
+  path="/videos"
+  element={<VideosPage data={data} onOpenInquiry={openInquiry} />}
+/>
         <Route
           path="/packages"
           element={
