@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { X, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 
 export default function GalleryLightboxModal({
@@ -8,6 +8,10 @@ export default function GalleryLightboxModal({
 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
   const [isClosing, setIsClosing] = useState(false);
+  const modalRef = useRef(null);
+
+  const isOpen =
+    initialIndex !== null && initialIndex !== undefined && images.length > 0;
 
   useEffect(() => {
     if (initialIndex !== null && initialIndex !== undefined) {
@@ -15,6 +19,22 @@ export default function GalleryLightboxModal({
       setIsClosing(false);
     }
   }, [initialIndex]);
+
+  // Focus modal + lock background scroll + prevent Lenis hijack while open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    modalRef.current?.focus();
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.setAttribute("data-lenis-prevent", "true");
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.removeAttribute("data-lenis-prevent");
+    };
+  }, [isOpen]);
 
   const triggerClose = useCallback(() => {
     setIsClosing(true);
@@ -33,7 +53,7 @@ export default function GalleryLightboxModal({
   }, [images.length]);
 
   useEffect(() => {
-    if (initialIndex === null || initialIndex === undefined) return;
+    if (!isOpen) return;
     const handleKey = (e) => {
       if (e.key === "Escape") triggerClose();
       if (e.key === "ArrowLeft") goPrev();
@@ -41,9 +61,9 @@ export default function GalleryLightboxModal({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [initialIndex, triggerClose, goPrev, goNext]);
+  }, [isOpen, triggerClose, goPrev, goNext]);
 
-  if (initialIndex === null || initialIndex === undefined || !images.length) {
+  if (!isOpen) {
     return null;
   }
 
@@ -52,12 +72,13 @@ export default function GalleryLightboxModal({
   return (
     <div
       onClick={triggerClose}
+      data-lenis-prevent
       style={{
         animation: isClosing
           ? "tmGalFadeOut 0.22s ease-in forwards"
           : "tmGalFadeIn 0.22s ease-out forwards",
       }}
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
     >
       <style>{`
         @keyframes tmGalFadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -73,13 +94,16 @@ export default function GalleryLightboxModal({
       `}</style>
 
       <div
+        ref={modalRef}
+        tabIndex={-1}
+        data-lenis-prevent
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: isClosing
             ? "tmGalZoomOut 0.22s ease-in forwards"
             : "tmGalZoomIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards",
         }}
-        className="max-w-4xl w-full bg-[#110E36] border border-white/15 rounded-3xl overflow-hidden shadow-2xl text-white"
+        className="max-w-4xl w-full bg-[#110E36] border border-white/15 rounded-3xl overflow-hidden shadow-2xl text-white focus:outline-none"
       >
         {/* Top Bar */}
         <div className="px-5 py-3.5 border-b border-white/10 flex items-center justify-between">

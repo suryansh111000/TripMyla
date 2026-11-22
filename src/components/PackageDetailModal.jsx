@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   X,
   Calendar,
@@ -16,8 +16,8 @@ export default function PackageDetailModal({
   onClose,
   onOpenInquiry,
 }) {
-
-    const [isClosing, setIsClosing] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const modalRef = useRef(null);
 
   const triggerClose = useCallback(() => {
     setIsClosing(true);
@@ -26,14 +26,31 @@ export default function PackageDetailModal({
       onClose();
     }, 220);
   }, [onClose]);
-    useEffect(() => {
-  if (!pkg) return;
-  const handleKeyDown = (e) => {
-    if (e.key === "Escape") triggerClose();
-  };
-  window.addEventListener("keydown", handleKeyDown);
-  return () => window.removeEventListener("keydown", handleKeyDown);
-}, [pkg, triggerClose]);
+
+  useEffect(() => {
+    if (!pkg) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") triggerClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pkg, triggerClose]);
+
+  useEffect(() => {
+    if (!pkg) return;
+
+    modalRef.current?.focus();
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.setAttribute("data-lenis-prevent", "true");
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.removeAttribute("data-lenis-prevent");
+    };
+  }, [pkg]);
+
   if (!pkg) return null;
 
   const isQuoteOnly =
@@ -44,69 +61,76 @@ export default function PackageDetailModal({
   )}`;
 
   return (
-<div
-  onClick={triggerClose}
-  style={{
-    animation: isClosing
-      ? "tmBackdropOut 0.22s ease-in forwards"
-      : "tmBackdropIn 0.22s ease-out forwards",
-  }}
-  className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4"
->
+    <div
+      onClick={triggerClose}
+      data-lenis-prevent
+      style={{
+        animation: isClosing
+          ? "tmBackdropOut 0.22s ease-in forwards"
+          : "tmBackdropIn 0.22s ease-out forwards",
+      }}
+      className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4"
+    >
       <div
-  onClick={(e) => e.stopPropagation()}
-  style={{
-    animation: isClosing
-      ? "tmModalOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards"
-      : "tmModalPop 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards",
-  }}
-  className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 relative"
->
-    <style>{`
+        ref={modalRef}
+        tabIndex={-1}
+        data-lenis-prevent
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          animation: isClosing
+            ? "tmModalOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards"
+            : "tmModalPop 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards",
+        }}
+        className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 relative focus:outline-none"
+      >
+        <style>{`
+          @keyframes tmBackdropOut {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+          }
+          @keyframes tmModalOut {
+            0% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(16px) scale(0.96);
+            }
+          }
+          @keyframes tmBackdropIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          @keyframes tmModalPop {
+            0% {
+              opacity: 0;
+              transform: translateY(18px) scale(0.96);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `}</style>
 
-    @keyframes tmBackdropOut {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-  @keyframes tmModalOut {
-    0% {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(16px) scale(0.96);
-    }
-  }
-
-  @keyframes tmBackdropIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-  }
-  @keyframes tmModalPop {
-    0% {
-      opacity: 0;
-      transform: translateY(18px) scale(0.96);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-`}</style>
         {/* Top Banner Image */}
         <div className="relative h-56 sm:h-64">
-          <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover" />
+          <img
+            src={pkg.image}
+            alt={pkg.title}
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
           <button
-  type="button"
-  onClick={triggerClose}
-  aria-label="Close details"
-  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/50 hover:bg-black text-white flex items-center justify-center transition"
->
-  <X className="w-5 h-5" />
-</button>
+            type="button"
+            onClick={triggerClose}
+            aria-label="Close details"
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/50 hover:bg-black text-white flex items-center justify-center transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
           <div className="absolute bottom-4 left-6 right-6 text-white">
             <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -126,9 +150,12 @@ export default function PackageDetailModal({
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold leading-tight">{pkg.title}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
+              {pkg.title}
+            </h2>
             <p className="mt-1 text-xs text-slate-200 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-amber-400" /> {pkg.location} • {pkg.duration}
+              <MapPin className="w-3.5 h-3.5 text-amber-400" /> {pkg.location} •{" "}
+              {pkg.duration}
             </p>
           </div>
         </div>
@@ -174,8 +201,12 @@ export default function PackageDetailModal({
                     <span className="inline-block text-[11px] font-extrabold uppercase text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
                       {step.day}
                     </span>
-                    <p className="mt-1 text-sm font-bold text-[#18125A]">{step.title}</p>
-                    <p className="text-xs text-slate-600 leading-relaxed">{step.detail}</p>
+                    <p className="mt-1 text-sm font-bold text-[#18125A]">
+                      {step.title}
+                    </p>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {step.detail}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -206,7 +237,8 @@ export default function PackageDetailModal({
                     Contact for best rates
                   </span>
                   <p className="text-[11px] text-slate-500 flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Tailor-made pricing
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />{" "}
+                    Tailor-made pricing
                   </p>
                 </div>
               ) : (
@@ -217,8 +249,12 @@ export default function PackageDetailModal({
                         {pkg.originalPrice}
                       </span>
                     )}
-                    <span className="text-2xl font-extrabold text-[#18125A]">{pkg.price}</span>
-                    <span className="text-xs font-semibold text-slate-500">/Adult</span>
+                    <span className="text-2xl font-extrabold text-[#18125A]">
+                      {pkg.price}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500">
+                      /Adult
+                    </span>
                   </div>
                   <p className="text-[11px] font-semibold text-amber-700">
                     {pkg.occupancyBasis || "Per-Person (on 2 Pax Basis)"}
