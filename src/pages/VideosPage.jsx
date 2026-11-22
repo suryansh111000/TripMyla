@@ -18,7 +18,7 @@ export default function VideosPage({ data, onOpenInquiry }) {
   const modalRef = useRef(null);
 
   const videos = data?.videos || [];
-  const whatsappNumber = data?.brand?.whatsappNumber || "919999999999";
+  const whatsappNumber = data?.brand?.whatsappNumber || "9118002023644";
 
   const filteredVideos =
     selectedCategory === "All"
@@ -207,9 +207,6 @@ export default function VideosPage({ data, onOpenInquiry }) {
   muted
   playsInline
   preload="auto"
-  onError={() =>
-    console.warn("Video failed to load:", activeVideo.videoUrl)
-  }
   className="w-full max-h-[65vh] object-contain"
 />
             </div>
